@@ -88,8 +88,9 @@ export default function AddBrand() {
     const fileName = `brand_${Date.now()}.${fileExt}`;
 
     const { error: uploadError } = await supabase.storage
-      .from("brand-images")
-      .upload(fileName, imageFile, { cacheControl: 3600, upsert: false });
+  .from("brand-images")
+  .upload(fileName, imageFile, { cacheControl: "3600", upsert: false });
+
 
     if (uploadError) {
       console.error("Upload Error:", uploadError);
