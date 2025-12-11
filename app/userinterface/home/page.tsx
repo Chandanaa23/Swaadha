@@ -330,7 +330,7 @@ export default function HomePage({ images }: { images: string[] }) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Toaster position="top-right" richColors />
+      <Toaster position="top-right" />
 
       {/* Banner Popup */}
       {showBanner && banner && (
@@ -431,7 +431,7 @@ export default function HomePage({ images }: { images: string[] }) {
 
       {/* Top Rated Products */}
       <div className="min-h-screen bg-gray-50">
-        <Toaster position="top-right" richColors />
+        <Toaster position="top-right" />
 
         {/* Top Rated Products Section */}
         <section className="w-full mx-auto px-6 sm:px-8 lg:px-12 py-28 bg-white">

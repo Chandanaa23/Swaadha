@@ -165,7 +165,9 @@ export default function OrderReport() {
                 <Td>{order.phone_number}</Td>
                 <Td>{order.total_price}</Td>
                 <Td>{order.grand_total}</Td>
-                <Td className={statusColor(order.status) + " font-semibold"}>{order.status}</Td>
+<Td className={statusColor(order.status) + " font-semibold"}>
+  {order.status}
+</Td>
                 <Td>{new Date(order.order_date).toLocaleString()}</Td>
               </tr>
             ))}
@@ -223,14 +225,38 @@ function statusColor(status: string) {
 }
 
 // Table header
-function Th({ children }: { children: React.ReactNode }) {
-  return <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">{children}</th>;
+function Th({
+  children,
+  className = "",
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <th
+      className={`px-4 py-2 text-left text-sm font-semibold text-gray-700 ${className}`}
+    >
+      {children}
+    </th>
+  );
 }
 
+
 // Table cell
-function Td({ children }: { children: React.ReactNode }) {
-  return <td className="px-4 py-2 text-sm text-gray-700">{children}</td>;
+function Td({
+  children,
+  className = "",
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <td className={`px-4 py-2 text-sm text-gray-700 ${className}`}>
+      {children}
+    </td>
+  );
 }
+
 
 // Summary card component
 function Card({ title, value, color, prefix = "" }: { title: string; value: number; color: string; prefix?: string }) {

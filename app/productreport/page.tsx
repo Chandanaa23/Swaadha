@@ -296,13 +296,37 @@ export default function ProductReport() {
    REUSABLE COMPONENTS
 -------------------------------------------- */
 
-function Th({ children }: { children: React.ReactNode }) {
-  return <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">{children}</th>;
+function Th({
+  children,
+  className = "",
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <th
+      className={`px-4 py-2 text-left text-sm font-semibold text-gray-700 ${className}`}
+    >
+      {children}
+    </th>
+  );
 }
 
-function Td({ children }: { children: React.ReactNode }) {
-  return <td className="px-4 py-2 text-sm text-gray-700">{children}</td>;
+
+function Td({
+  children,
+  className = "",
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <td className={`px-4 py-2 text-sm text-gray-700 ${className}`}>
+      {children}
+    </td>
+  );
 }
+
 
 function Card({ title, value, color }: { title: string; value: number; color: string }) {
   const bgClass = `bg-${color}-100`;
