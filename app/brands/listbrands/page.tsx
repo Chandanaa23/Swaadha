@@ -117,11 +117,14 @@ export default function BrandList() {
     }
 
     // PUBLIC URL + CACHE BUSTER
-    const { publicUrl } = supabase.storage
-      .from("brand-images")
-      .getPublicUrl(filename);
+    const { data } = supabase.storage
+  .from("brand-images")
+  .getPublicUrl(filename);
 
-    updatedData.image_url = `${publicUrl}?v=${Date.now()}`; // <--- prevents caching
+const publicUrl = data?.publicUrl || "";
+
+updatedData.image_url = `${publicUrl}?v=${Date.now()}`;
+// <--- prevents caching
   }
 
   // ------------------------------------------
