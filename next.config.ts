@@ -3,7 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   images: {
     domains: ["mbmnsmzllagmbkvlnfwt.supabase.co"], // your Supabase domain
-     remotePatterns: [
+    remotePatterns: [
       {
         protocol: 'https',
         hostname: 'images.unsplash.com',
@@ -12,10 +12,9 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  experimental: { appDir: true }, // if you are using app directory
+  output: "standalone",           // for Netlify
+  trailingSlash: true,            // helps with Netlify routing
 };
-
-
-module.exports = nextConfig;
-
 
 export default nextConfig;
