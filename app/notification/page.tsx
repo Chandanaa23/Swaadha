@@ -80,26 +80,31 @@ export default function NotificationBannerSettings() {
 
   // Upload image
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files?.length) return;
+  if (!e.target.files?.length) return;
 
-    const file = e.target.files[0];
-    const fileName = `${Date.now()}_${file.name}`;
+  const file = e.target.files[0];
+  const fileName = `${Date.now()}_${file.name}`;
 
-    setUploading(true);
+  setUploading(true);
 
-    const { error } = await supabase.storage.from("banners").upload(fileName, file);
+  const { error: uploadError } = await supabase.storage
+    .from("banners")
+    .upload(fileName, file);
 
-    if (error) {
-      toast.error("Upload failed");
-      setUploading(false);
-      return;
-    }
-
-    const { publicUrl } = supabase.storage.from("banners").getPublicUrl(fileName);
-
-    setSelectedBanner(prev => prev && { ...prev, image_url: publicUrl });
+  if (uploadError) {
+    toast.error("Upload failed");
     setUploading(false);
-  };
+    return;
+  }
+
+  // FIXED: extract publicUrl correctly
+  const { data } = supabase.storage.from("banners").getPublicUrl(fileName);
+  const publicUrl = data.publicUrl;
+
+  setSelectedBanner(prev => prev && { ...prev, image_url: publicUrl });
+  setUploading(false);
+};
+
 
   // Remove image
   const removeImage = () => {
