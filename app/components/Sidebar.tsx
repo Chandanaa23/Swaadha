@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { ReactNode } from "react";
+
 import Link from "next/link";
 import {
   Home,
@@ -23,7 +25,7 @@ interface SidebarProps {
 
 interface MenuItem {
   label: string;
-  icon?: JSX.Element;
+  icon?: ReactNode;
   href?: string;
   subMenu?: MenuItem[];
 }
