@@ -36,13 +36,34 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
+// -------------------- TYPES --------------------
+type Order = {
+  id: number;
+  full_name: string;
+  grand_total: number;
+  order_date: string;
+};
+
+type Stats = {
+  totalOrders: number;
+  totalPOSOrders: number;
+  onlineSales: number;
+  posSales: number;
+  totalCustomers: number;
+  totalProducts: number;
+  activeBanners: number;
+  activeOffers: number;
+  recentOrders: Order[];
+  recentPosOrders: Order[];
+};
+
 export default function AdminDashboard() {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [role, setRole] = useState<"admin" | "subadmin" | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const [stats, setStats] = useState({
+  const [stats, setStats] = useState<Stats>({
     totalOrders: 0,
     totalPOSOrders: 0,
     onlineSales: 0,
@@ -55,7 +76,6 @@ export default function AdminDashboard() {
     recentPosOrders: [],
   });
 
-  // -------------------- CHART STATES WITH TYPES --------------------
   const [sevenDayChart, setSevenDayChart] = useState<ChartData<"line", number[], string>>({
     labels: [],
     datasets: [],
@@ -142,7 +162,7 @@ export default function AdminDashboard() {
 
       /* 7-DAY SALES */
       const daily: Record<string, number> = {};
-      last7DaysOrders.data?.forEach((o) => {
+      last7DaysOrders.data?.forEach((o: any) => {
         const day = new Date(o.order_date).toLocaleDateString("en-IN", { weekday: "short" });
         daily[day] = (daily[day] || 0) + Number(o.grand_total);
       });
@@ -175,7 +195,7 @@ export default function AdminDashboard() {
 
       /* CATEGORY PIE */
       const catCount: Record<string, number> = {};
-      productCategories.data?.forEach((p) => {
+      productCategories.data?.forEach((p: any) => {
         catCount[p.category_id] = (catCount[p.category_id] || 0) + 1;
       });
       setCategoryChart({
@@ -192,14 +212,14 @@ export default function AdminDashboard() {
       setStats({
         totalOrders: orders.count || 0,
         totalPOSOrders: posOrders.count || 0,
-        onlineSales: onlineSales.data?.reduce((s, o) => s + Number(o.grand_total), 0) || 0,
-        posSales: posSales.data?.reduce((s, o) => s + Number(o.grand_total), 0) || 0,
+        onlineSales: onlineSales.data?.reduce((s: number, o: any) => s + Number(o.grand_total), 0) || 0,
+        posSales: posSales.data?.reduce((s: number, o: any) => s + Number(o.grand_total), 0) || 0,
         totalProducts: products.count || 0,
         totalCustomers: customers.count || 0,
         activeBanners: banners.count || 0,
         activeOffers: offers.count || 0,
-        recentOrders: recentOrders.data || [],
-        recentPosOrders: recentPosOrders.data || [],
+        recentOrders: (recentOrders.data as Order[]) || [],
+        recentPosOrders: (recentPosOrders.data as Order[]) || [],
       });
 
       setLoading(false);
