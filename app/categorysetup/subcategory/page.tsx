@@ -97,9 +97,10 @@ const [subToDelete, setSubToDelete] = useState<Subcategory | null>(null);
     setError(null);
     try {
       const { data, error } = await supabase
-        .from<Subcategory>("subcategories")
-        .select(`*, categories(name)`)
-        .order("priority", { ascending: true });
+  .from("subcategories")
+  .select(`*, categories(name)`)
+  .order("priority", { ascending: true });
+
 
       if (error) throw error;
 

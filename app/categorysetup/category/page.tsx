@@ -87,9 +87,10 @@ export default function CategoriesPage() {
     setError(null);
     try {
       const { data, error } = await supabase
-        .from<Category>("categories")
-        .select("*")
-        .order("priority", { ascending: true });
+  .from("categories")  // remove <Category>
+  .select("*")
+  .order("priority", { ascending: true });
+
 
       if (error) throw error;
       setCategories(data || []);

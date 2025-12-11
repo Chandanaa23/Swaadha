@@ -122,14 +122,15 @@ export default function SubSubcategoriesPage() {
   setError(null);
 
   try {
-    const { data, error } = await supabase
-      .from<SubSubcategory>("sub_subcategories")
-      .select(`
-        *,
-        categories(name),
-        subcategories(name)
-      `)
-      .order("priority");
+   const { data, error } = await supabase
+  .from("sub_subcategories")
+  .select(`
+    *,
+    categories(name),
+    subcategories(name)
+  `)
+  .order("priority");
+
 
     if (error) throw error;
 
