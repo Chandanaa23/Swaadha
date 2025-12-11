@@ -80,7 +80,7 @@ const [subToDelete, setSubToDelete] = useState<Subcategory | null>(null);
   async function loadCategories() {
     try {
       const { data, error } = await supabase
-        .from<Category>("categories")
+        .from ("categories")
         .select("*")
         .order("priority", { ascending: true });
 

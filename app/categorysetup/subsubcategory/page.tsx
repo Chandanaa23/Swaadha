@@ -97,7 +97,7 @@ export default function SubSubcategoriesPage() {
   }, [searchQuery, subSubcategories]);
 
   async function loadCategories() {
-    const { data, error } = await supabase.from<Category>("categories").select("*").order("priority");
+    const { data, error } = await supabase.from ("categories").select("*").order("priority");
     if (error) return console.error(error);
     setCategories(data || []);
   }
@@ -105,7 +105,7 @@ export default function SubSubcategoriesPage() {
   setError(null);
   try {
     const { data, error } = await supabase
-      .from<Subcategory>("subcategories")
+      .from ("subcategories")
       .select("*")
       .order("priority");
     if (error) throw error;
