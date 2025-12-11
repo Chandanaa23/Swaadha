@@ -1,5 +1,4 @@
-// pages/api/users.ts
-import { NextApiRequest, NextApiResponse } from "next";
+import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
 const supabaseAdmin = createClient(
@@ -7,20 +6,19 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export async function GET() {
   try {
     const { data, error } = await supabaseAdmin.auth.admin.listUsers();
 
     if (error) {
       console.error("Supabase admin error:", error);
-      return res.status(500).json({ users: [] });
+      return NextResponse.json({ users: [] }, { status: 500 });
     }
 
-    // Ensure users is always an array
     const users = data?.users || [];
-    return res.status(200).json({ users });
+    return NextResponse.json({ users }, { status: 200 });
   } catch (err) {
     console.error("Unexpected error:", err);
-    return res.status(500).json({ users: [] });
+    return NextResponse.json({ users: [] }, { status: 500 });
   }
 }
