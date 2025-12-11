@@ -15,6 +15,7 @@ import {
   ArcElement,
   Tooltip,
   Legend,
+  ChartData,
 } from "chart.js";
 
 import { Line, Bar, Pie } from "react-chartjs-2";
@@ -54,15 +55,22 @@ export default function AdminDashboard() {
     recentPosOrders: [],
   });
 
-  const [sevenDayChart, setSevenDayChart] = useState<any>(null);
-const [comparisonChart, setComparisonChart] = useState({
-  labels: [],
-  datasets: [],
-});
-const [categoryChart, setCategoryChart] = useState({
-  labels: [],
-  datasets: [],
-});
+  // -------------------- CHART STATES WITH TYPES --------------------
+  const [sevenDayChart, setSevenDayChart] = useState<ChartData<"line", number[], string>>({
+    labels: [],
+    datasets: [],
+  });
+
+  const [comparisonChart, setComparisonChart] = useState<ChartData<"bar", number[], string>>({
+    labels: [],
+    datasets: [],
+  });
+
+  const [categoryChart, setCategoryChart] = useState<ChartData<"pie", number[], string>>({
+    labels: [],
+    datasets: [],
+  });
+
   const [selectedRange, setSelectedRange] = useState("7d");
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
@@ -72,18 +80,17 @@ const [categoryChart, setCategoryChart] = useState({
 
   /* -------------------- AUTH CHECK -------------------- */
   useEffect(() => {
-  const role = localStorage.getItem("role");
-  const isLoggedIn = localStorage.getItem("isLoggedIn");
+    const role = localStorage.getItem("role");
+    const isLoggedIn = localStorage.getItem("isLoggedIn");
 
-  if (!isLoggedIn || !role) {
-    router.replace("/login");
-    return;
-  }
+    if (!isLoggedIn || !role) {
+      router.replace("/login");
+      return;
+    }
 
-  setRole(role === "admin" ? "admin" : "subadmin");
-  setLoading(false);
-}, [router]);
-
+    setRole(role === "admin" ? "admin" : "subadmin");
+    setLoading(false);
+  }, [router]);
 
   /* -------------------- DASHBOARD DATA -------------------- */
   async function loadDashboard() {
@@ -134,11 +141,9 @@ const [categoryChart, setCategoryChart] = useState({
       ]);
 
       /* 7-DAY SALES */
-      const daily: any = {};
+      const daily: Record<string, number> = {};
       last7DaysOrders.data?.forEach((o) => {
-        const day = new Date(o.order_date).toLocaleDateString("en-IN", {
-          weekday: "short",
-        });
+        const day = new Date(o.order_date).toLocaleDateString("en-IN", { weekday: "short" });
         daily[day] = (daily[day] || 0) + Number(o.grand_total);
       });
 
@@ -162,17 +167,14 @@ const [categoryChart, setCategoryChart] = useState({
         datasets: [
           {
             label: "Orders Count",
-            data: [
-              monthlyOrders?.data?.length ?? 0,
-              monthlyPosOrders?.data?.length ?? 0,
-            ],
+            data: [monthlyOrders?.data?.length ?? 0, monthlyPosOrders?.data?.length ?? 0],
             backgroundColor: ["#3b82f6", "#f59e0b"],
           },
         ],
       });
 
       /* CATEGORY PIE */
-      const catCount: any = {};
+      const catCount: Record<string, number> = {};
       productCategories.data?.forEach((p) => {
         catCount[p.category_id] = (catCount[p.category_id] || 0) + 1;
       });
@@ -211,8 +213,7 @@ const [categoryChart, setCategoryChart] = useState({
     if (role) loadDashboard();
   }, [role]);
 
-  /* -------------------- FILTER DATA -------------------- */
-  const filteredChartData = sevenDayChart || { labels: [], datasets: [] };
+  const filteredChartData = sevenDayChart;
 
   if (!mounted) return null;
   if (!role) return <p className="text-center p-10">Checking login...</p>;
@@ -220,7 +221,6 @@ const [categoryChart, setCategoryChart] = useState({
 
   return (
     <div className="flex">
-
       <div className="p-6 space-y-10 bg-white w-full">
         <h1 className="text-3xl font-bold">Dashboard</h1>
 
