@@ -41,7 +41,7 @@ interface Variation {
 export default function AddProduct() {
 const [categories, setCategories] = useState<Category[]>([]);
   const [subcategories, setSubcategories] = useState([]);
-  const [subSubcategories, setSubSubcategories] = useState([]);
+const [subSubcategories, setSubSubcategories] = useState<SubSubcategory[]>([]);
   const [tastes, setTastes] = useState<any[]>([]);
   const [unitTypes, setUnitTypes] = useState<any[]>([]);
   const [fieldErrors, setFieldErrors] = useState<any>({});
@@ -74,7 +74,8 @@ const [categories, setCategories] = useState<Category[]>([]);
   const fetchData = async () => {
     try {
       const { data: catData } = await supabase.from("categories").select("*");
-      setCategories(catData);
+setCategories(catData || []); // fallback to empty array
+
 
       const { data: attrData } = await supabase.from("attributes").select("*");
       setTastes(attrData?.filter((a) => a.type === "taste") || []);
@@ -87,22 +88,29 @@ const [categories, setCategories] = useState<Category[]>([]);
 
   const handleCategoryChange = async (categoryId: string) => {
     setForm({ ...form, category_id: categoryId, subcategory_id: "", sub_subcategory_id: "" });
-    const { data } = await supabase.from("subcategories").select("*").eq("category_id", categoryId);
-    setSubcategories(data || []);
+    const { data } = await supabase
+  .from("subcategories")
+  .select("*")
+  .eq("category_id", categoryId) as { data: Subcategory[] | null };
+
     setSubSubcategories([]);
   };
 
   const handleSubcategoryChange = async (subcategoryId: string) => {
     setForm({ ...form, subcategory_id: subcategoryId, sub_subcategory_id: "" });
-    const { data } = await supabase.from("sub_subcategories").select("*").eq("subcategory_id", subcategoryId);
+    const { data } = await supabase
+    .from("sub_subcategories")
+    .select("*")
+    .eq("subcategory_id", subcategoryId)
     setSubSubcategories(data || []);
   };
 
   const handleVariationChange = (index: number, field: string, value: string) => {
-    const newVariations = [...form.variations];
-    newVariations[index][field] = value;
-    setForm({ ...form, variations: newVariations });
-  };
+  const newVariations = [...form.variations];
+  (newVariations[index] as any)[field] = value;
+  setForm({ ...form, variations: newVariations });
+};
+
 
   const addVariation = () => {
     setForm({ ...form, variations: [...form.variations, { unit_type: "", price: "", stock: "" }] });
