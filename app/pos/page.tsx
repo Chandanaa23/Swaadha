@@ -69,62 +69,69 @@ export default function POSPage() {
 
   // ADD TO CART (handle variations & no variations)
   // ADD TO CART (handle variations & no variations)
-  const addToCart = (product) => {
-    const variationId = selectedVariations[product.id];
-    const variation =
-      product.product_variations?.find((v) => v.id === variationId) ||
-      (product.product_variations?.length === 1 ? product.product_variations[0] : null);
+// ADD TO CART (handle variations & no variations)
+const addToCart = (product: any) => {
+  const variationId = selectedVariations[product.id];
+  const variation =
+    product.product_variations?.find((v: any) => v.id === variationId) ||
+    (product.product_variations?.length === 1 ? product.product_variations[0] : null);
 
-    const cid = variation ? `${product.id}-${variation.id}` : product.id;
+  const cid = variation ? `${product.id}-${variation.id}` : product.id;
 
-    const existing = cart.find((item) => item.cid === cid);
+  const existing = cart.find((item) => item.cid === cid);
 
-    // CHECK STOCK BEFORE ADDING
-    const availableStock = variation ? variation.stock : product.stock;
-    const currentQty = existing ? existing.qty : 0;
+  const availableStock = variation ? variation.stock : product.stock;
+  const currentQty = existing ? existing.qty : 0;
 
-    if (currentQty + 1 > availableStock) {
-      return toast.error("Cannot add more, stock is insufficient!");
-    }
+  if (currentQty + 1 > availableStock) {
+    return toast.error("Cannot add more, stock is insufficient!");
+  }
 
-    if (existing) {
-      setCart(
-        cart.map((item) =>
-          item.cid === cid ? { ...item, qty: item.qty + 1 } : item
-        )
-      );
-    } else {
-      setCart([
-        ...cart,
-        {
-          cid,
-          id: product.id,
-          name: product.name,
-          variation,
-          price: variation ? variation.price : product.price,
-          qty: 1,
-        },
-      ]);
-    }
-  };
+  if (existing) {
+    setCart(
+      cart.map((item) =>
+        item.cid === cid ? { ...item, qty: item.qty + 1 } : item
+      )
+    );
+  } else {
+    setCart([
+      ...cart,
+      {
+        cid,
+        id: product.id,
+        name: product.name,
+        variation,
+        price: variation ? variation.price : product.price,
+        qty: 1,
+      },
+    ]);
+  }
+};
+
 
   // UPDATE QTY
-  const updateQty = (cid, change) => {
-    const item = cart.find((i) => i.cid === cid);
-    if (!item) return;
+  const updateQty = (cid: string, change: number) => {
+  const item = cart.find((i) => i.cid === cid);
+  if (!item) return;
 
-    const availableStock = item.variation ? item.variation.stock : products.find(p => p.id === item.id)?.stock || 0;
-    const newQty = item.qty + change;
+  const availableStock =
+    item.variation
+      ? item.variation.stock
+      : products.find((p) => p.id === item.id)?.stock || 0;
 
-    if (newQty > availableStock) return toast.error("Cannot increase, stock is insufficient!");
-    if (newQty <= 0) {
-      setCart(cart.filter((i) => i.cid !== cid));
-    } else {
-      setCart(
-        cart.map((i) => (i.cid === cid ? { ...i, qty: newQty } : i))
-      );
-    }
-  };
+  const newQty = item.qty + change;
+
+  if (newQty > availableStock) {
+    return toast.error("Cannot increase, stock is insufficient!");
+  }
+
+  if (newQty <= 0) {
+    setCart(cart.filter((i) => i.cid !== cid));
+  } else {
+    setCart(cart.map((i) => (i.cid === cid ? { ...i, qty: newQty } : i)));
+  }
+};
+
 
 
   // BILLING CALCULATIONS

@@ -132,10 +132,10 @@ export default function BarcodePage() {
 
   // NEW react-to-print API
 const handlePrint = useReactToPrint({
-  contentRef: printAreaRef,   // 👈 Required for Next.js 15/16
+  contentRef: printAreaRef,
   documentTitle: `${product?.name}_barcodes`,
-  removeAfterPrint: true,
 });
+
 
 const printWithGenerate = async () => {
   generateBarcode();
