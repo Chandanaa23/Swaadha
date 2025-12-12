@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
-import toast,{Toaster} from "react-hot-toast"
+import toast, { Toaster } from "react-hot-toast"
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -69,68 +69,68 @@ export default function POSPage() {
 
   // ADD TO CART (handle variations & no variations)
   // ADD TO CART (handle variations & no variations)
-// ADD TO CART (handle variations & no variations)
-const addToCart = (product: any) => {
-  const variationId = selectedVariations[product.id];
-  const variation =
-    product.product_variations?.find((v: any) => v.id === variationId) ||
-    (product.product_variations?.length === 1 ? product.product_variations[0] : null);
+  // ADD TO CART (handle variations & no variations)
+  const addToCart = (product: any) => {
+    const variationId = selectedVariations[product.id];
+    const variation =
+      product.product_variations?.find((v: any) => v.id === variationId) ||
+      (product.product_variations?.length === 1 ? product.product_variations[0] : null);
 
-  const cid = variation ? `${product.id}-${variation.id}` : product.id;
+    const cid = variation ? `${product.id}-${variation.id}` : product.id;
 
-  const existing = cart.find((item) => item.cid === cid);
+    const existing = cart.find((item) => item.cid === cid);
 
-  const availableStock = variation ? variation.stock : product.stock;
-  const currentQty = existing ? existing.qty : 0;
+    const availableStock = variation ? variation.stock : product.stock;
+    const currentQty = existing ? existing.qty : 0;
 
-  if (currentQty + 1 > availableStock) {
-    return toast.error("Cannot add more, stock is insufficient!");
-  }
+    if (currentQty + 1 > availableStock) {
+      return toast.error("Cannot add more, stock is insufficient!");
+    }
 
-  if (existing) {
-    setCart(
-      cart.map((item) =>
-        item.cid === cid ? { ...item, qty: item.qty + 1 } : item
-      )
-    );
-  } else {
-    setCart([
-      ...cart,
-      {
-        cid,
-        id: product.id,
-        name: product.name,
-        variation,
-        price: variation ? variation.price : product.price,
-        qty: 1,
-      },
-    ]);
-  }
-};
+    if (existing) {
+      setCart(
+        cart.map((item) =>
+          item.cid === cid ? { ...item, qty: item.qty + 1 } : item
+        )
+      );
+    } else {
+      setCart([
+        ...cart,
+        {
+          cid,
+          id: product.id,
+          name: product.name,
+          variation,
+          price: variation ? variation.price : product.price,
+          qty: 1,
+        },
+      ]);
+    }
+  };
 
 
   // UPDATE QTY
   const updateQty = (cid: string, change: number) => {
-  const item = cart.find((i) => i.cid === cid);
-  if (!item) return;
+    const item = cart.find((i) => i.cid === cid);
+    if (!item) return;
 
-  const availableStock =
-    item.variation
-      ? item.variation.stock
-      : products.find((p) => p.id === item.id)?.stock || 0;
+    const availableStock =
+      item.variation
+        ? item.variation.stock
+        : products.find((p) => p.id === item.id)?.stock || 0;
 
-  const newQty = item.qty + change;
+    const newQty = item.qty + change;
 
-  if (newQty > availableStock) {
-    return toast.error("Cannot increase, stock is insufficient!");
-  }
+    if (newQty > availableStock) {
+      return toast.error("Cannot increase, stock is insufficient!");
+    }
 
-  if (newQty <= 0) {
-    setCart(cart.filter((i) => i.cid !== cid));
-  } else {
-    setCart(cart.map((i) => (i.cid === cid ? { ...i, qty: newQty } : i)));
-  }
-};
+    if (newQty <= 0) {
+      setCart(cart.filter((i) => i.cid !== cid));
+    } else {
+      setCart(cart.map((i) => (i.cid === cid ? { ...i, qty: newQty } : i)));
+    }
+  };
 
 
 
@@ -144,22 +144,22 @@ const addToCart = (product: any) => {
   // PLACE ORDER FUNCTION
   const placeOrder = async () => {
     if (!cart.length) {
-  toast.error("Cart is empty.");
-  setTimeout(() => toast.error(null), 3000); // hide after 3 seconds
-  return;
-}
+      toast.error("Cart is empty.");
+      setTimeout(() => toast.error(null), 3000); // hide after 3 seconds
+      return;
+    }
 
-if (!customerType) {
-  toast.error("Please select a customer type.");
-  setTimeout(() => toast.error(null), 3000);
-  return;
-}
+    if (!customerType) {
+      toast.error("Please select a customer type.");
+      setTimeout(() => toast.error(null), 3000);
+      return;
+    }
 
-if (!paymentMethod) {
-  toast.error("Please select a payment method.");
-  setTimeout(() => toast.error(null), 3000);
-  return;
-}
+    if (!paymentMethod) {
+      toast.error("Please select a payment method.");
+      setTimeout(() => toast.error(null), 3000);
+      return;
+    }
 
 
     let customerId = selectedCustomerId;
@@ -236,10 +236,10 @@ if (!paymentMethod) {
       }
     }
 
-// After successfully placing the order
-toast.success(`Order placed! Order ID: ${data[0].id}`);
+    // After successfully placing the order
+    toast.success(`Order placed! Order ID: ${data[0].id}`);
 
-// Automatically hide after 3 seconds
+    // Automatically hide after 3 seconds
 
     // RESET
     setCart([]);
@@ -275,8 +275,8 @@ toast.success(`Order placed! Order ID: ${data[0].id}`);
 
 
   return (
-<div className="p-6 md:p-10 bg-white w-full h-screen overflow-auto">
-              <Toaster position="top-right" />
+    <div className="p-6 md:p-10 bg-white w-full h-screen overflow-auto">
+      <Toaster position="top-right" />
 
 
       <h1 className="text-3xl font-bold  mb-6">POS</h1>
@@ -364,7 +364,7 @@ toast.success(`Order placed! Order ID: ${data[0].id}`);
                         className="border p-2 rounded w-full"
                       >
                         <option value="">Select Option</option>
-                        {variations.map((v) => (
+                        {variations.map((v: any) => (
                           <option key={v.id} value={v.id}>
                             {v.unit_value} {v.unit_type.toUpperCase()} - ₹ {v.price} (
                             {v.stock} stock)
@@ -377,7 +377,8 @@ toast.success(`Order placed! Order ID: ${data[0].id}`);
                         disabled={
                           variations.length > 0 &&
                           (!selectedVariations[p.id] ||
-                            variations.find((v) => v.id === selectedVariations[p.id])?.stock ===
+                            variations.find((v: any) =>
+                              v.id === selectedVariations[p.id])?.stock ===
                             0)
                         }
                         className="w-full py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:bg-gray-300 transition"
@@ -617,7 +618,7 @@ toast.success(`Order placed! Order ID: ${data[0].id}`);
               >
                 Close
               </button>
-        
+
 
             </div>
           </div>

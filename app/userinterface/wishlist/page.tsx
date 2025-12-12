@@ -21,6 +21,7 @@ interface WishlistItem {
   price: number;
   image: string;
   shipping_charge: number;
+  stock: number;
 }
 
 export default function WishlistPage() {
@@ -45,7 +46,7 @@ const router = useRouter();
   }, []);
 
   // Fetch wishlist
-  const fetchWishlist = async () => {
+const fetchWishlist = async () => {
   if (!userId) return;
 
   const { data, error } = await supabase
@@ -57,28 +58,40 @@ const router = useRouter();
         id,
         name,
         shipping_charge,
-        product_variations(price, stock),
-        product_images(image_url)
+        active,
+        product_variations (
+          price,
+          stock
+        ),
+        product_images (
+          image_url
+        )
       )
     `)
-    .eq("user_id", userId)
+    .eq("user_id", userId);
 
-  if (!error && data) {
+  if (error) {
+    console.log("Wishlist fetch error:", error);
+    return;
+  }
+
+  if (data) {
     const formatted = data
-     .filter((w: any) => w.products?.active) // ✅ only active products
-    .map((w: any) => ({
-      id: w.id,
-      product_id: w.product_id,
-      name: w.products?.name,
-      price: w.products?.product_variations?.[0]?.price || 0,
-      stock: w.products?.product_variations?.[0]?.stock || 0, // ✅ add stock
-      image: w.products?.product_images?.[0]?.image_url || "/placeholder.png",
-      shipping_charge: w.products?.shipping_charge || 0,
-    }));
+      .filter((w: any) => w.products) // keep only if product exists
+      .map((w: any) => ({
+        id: w.id,
+        product_id: w.product_id,
+        name: w.products.name || "Unnamed Product",
+        price: w.products.product_variations?.[0]?.price || 0,
+        stock: w.products.product_variations?.[0]?.stock || 0,
+        image: w.products.product_images?.[0]?.image_url || "/placeholder.png",
+        shipping_charge: w.products.shipping_charge || 0,
+      }));
 
     setWishlist(formatted);
   }
 };
+
 
 
   useEffect(() => {

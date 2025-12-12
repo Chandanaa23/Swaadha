@@ -93,7 +93,7 @@ export default function LoginSignupPage() {
       }
     } catch (err: any) {
       console.error(err);
-      toast.error({ login: "Something went wrong. Please try again." });
+      toast.error("Something went wrong. Please try again." );
     }
   };
 

@@ -29,18 +29,15 @@ export async function POST(req: NextRequest) {
     const data = (await req.json()) as OrderRequestBody;
     const { cart, shippingDetails, paymentMethod, totals, orderDate, userId } = data;
 
-    // 1️⃣ Fetch user email (if provided)
+    // 1️⃣ Fetch user email if userId is provided
     let userEmail = "";
     if (userId) {
       const { data: userData, error: userError } = await supabase
-        .from("auth.users") // Requires server-side service role in supabase.ts
+        .from("auth.users")
         .select("email")
         .eq("id", userId)
         .single();
-
-      if (!userError && userData) {
-        userEmail = userData.email;
-      }
+      if (!userError && userData) userEmail = userData.email;
     }
 
     // 2️⃣ Insert order
@@ -68,11 +65,11 @@ export async function POST(req: NextRequest) {
       .select()
       .single();
 
-    if (orderError) throw orderError;
+    if (orderError || !orderData) throw orderError || new Error("Failed to create order");
 
-    const orderId = orderData.id;
+    const orderId = orderData.id; // UUID safe, keep as string
 
-    // 3️⃣ Insert all order items (TYPED FIX HERE)
+    // 3️⃣ Insert order items
     const orderItems = cart.map((item: CartItem) => ({
       order_id: orderId,
       product_id: item.productId,
@@ -84,42 +81,29 @@ export async function POST(req: NextRequest) {
       image: item.image,
     }));
 
-    const { error: itemsError } = await supabase
-      .from("order_items")
-      .insert(orderItems);
-
+    const { error: itemsError } = await supabase.from("order_items").insert(orderItems);
     if (itemsError) throw itemsError;
 
-    // 4️⃣ Return response
+    // 4️⃣ Return order with items
     return NextResponse.json({
       message: "Order placed successfully",
       order: {
         ...orderData,
         email: userEmail,
-        items: orderItems,
+        cart_items: orderItems,
       },
     });
   } catch (err: any) {
-    console.error(err);
-    return NextResponse.json(
-      { error: err.message || "Error placing order" },
-      { status: 500 }
-    );
+    console.error("POST /orders error:", err);
+    return NextResponse.json({ error: err.message || "Error placing order" }, { status: 500 });
   }
 }
 
 // GET: Fetch a single order by ID
 export async function GET(req: NextRequest) {
   try {
-    const parts = req.url.split("/");
-    const orderId = Number(parts[parts.length - 1]);
-
-    if (!orderId) {
-      return NextResponse.json(
-        { error: "Order ID missing" },
-        { status: 400 }
-      );
-    }
+    const orderId = req.nextUrl.pathname.split("/").filter(Boolean).pop();
+    if (!orderId) return NextResponse.json({ error: "Order ID missing" }, { status: 400 });
 
     // Fetch order
     const { data: orderData, error: orderError } = await supabase
@@ -127,42 +111,40 @@ export async function GET(req: NextRequest) {
       .select("*")
       .eq("id", orderId)
       .single();
+    if (orderError || !orderData) return NextResponse.json({ error: "Order not found" }, { status: 404 });
 
-    if (orderError || !orderData) {
-      return NextResponse.json(
-        { error: orderError?.message || "Order not found" },
-        { status: 404 }
-      );
-    }
-
-    // Fetch user email
+    // Fetch user email if exists
     let email = "";
     if (orderData.user_id) {
-      const { data: userData, error: userError } = await supabase
+      const { data: userData } = await supabase
         .from("auth.users")
         .select("email")
         .eq("id", orderData.user_id)
         .single();
-
-      if (!userError && userData) {
-        email = userData.email;
-      }
+      if (userData) email = userData.email;
     }
 
-    // Fetch items
+    // Fetch items linked to this order
     const { data: items } = await supabase
       .from("order_items")
       .select("*")
       .eq("order_id", orderData.id);
 
+    const cart_items = items?.map((item) => ({
+      id: item.id,
+      productId: item.product_id,
+      name: item.product_name,
+      variation_name: item.variation_name,
+      quantity: item.quantity,
+      price: item.price,
+      image: item.image,
+    })) || [];
+
     return NextResponse.json({
-      order: { ...orderData, email, items },
+      order: { ...orderData, email, cart_items },
     });
   } catch (err: any) {
-    console.error(err);
-    return NextResponse.json(
-      { error: err.message || "Unexpected error" },
-      { status: 500 }
-    );
+    console.error("GET /orders error:", err);
+    return NextResponse.json({ error: err.message || "Unexpected error" }, { status: 500 });
   }
 }

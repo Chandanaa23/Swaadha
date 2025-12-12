@@ -187,8 +187,9 @@ export default function HomePage({ images }: { images: string[] }) {
 
 
   useEffect(() => {
-    fetchTopProducts().then(setProducts);
-  }, []);
+fetchTopProducts().then((res) => setProducts(res as any[]));
+}, []);
+
 
 
   const addToCart = async (product: Product) => {

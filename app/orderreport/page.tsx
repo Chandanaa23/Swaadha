@@ -165,9 +165,9 @@ export default function OrderReport() {
                 <Td>{order.phone_number}</Td>
                 <Td>{order.total_price}</Td>
                 <Td>{order.grand_total}</Td>
-<Td className={statusColor(order.status) + " font-semibold"}>
-  {order.status}
-</Td>
+                <Td className={statusColor(order.status) + " font-semibold"}>
+                  {order.status}
+                </Td>
                 <Td>{new Date(order.order_date).toLocaleString()}</Td>
               </tr>
             ))}
@@ -191,9 +191,8 @@ export default function OrderReport() {
             <button
               key={page}
               onClick={() => setCurrentPage(page)}
-              className={`px-3 py-1 rounded ${
-                page === currentPage ? "bg-gray-200" : "bg-gray-200 text-gray-700"
-              }`}
+              className={`px-3 py-1 rounded ${page === currentPage ? "bg-gray-200" : "bg-gray-200 text-gray-700"
+                }`}
             >
               {page}
             </button>

@@ -105,7 +105,7 @@ const [comment, setComment] = useState("");
     // Attach image_url to cart items
     const updatedOrders = ordersData.map((order) => ({
       ...order,
-      cart_items: order.cart_items.map((item) => ({
+      cart_items: order.cart_items.map((item : any ) => ({
         ...item,
         image_url: imageMap.get(item.productId) || "/placeholder.png",
       })),

@@ -8,9 +8,38 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
+interface Category {
+  id: number;
+  name: string;
+}
+
+interface Subcategory {
+  id: number;
+  name: string;
+  category_id: number;
+}
+
+interface SubSubcategory {
+  id: number;
+  name: string;
+  subcategory_id: number;
+}
+
+interface Attribute {
+  id: number;
+  type: string;
+  name: string;
+}
+
+interface Variation {
+  unit_type: string;
+  price: number | string;
+  stock: number | string;
+}
+
 
 export default function AddProduct() {
-  const [categories, setCategories] = useState([]);
+const [categories, setCategories] = useState<Category[]>([]);
   const [subcategories, setSubcategories] = useState([]);
   const [subSubcategories, setSubSubcategories] = useState([]);
   const [tastes, setTastes] = useState<any[]>([]);
@@ -253,7 +282,7 @@ export default function AddProduct() {
               onChange={(e) => handleCategoryChange(e.target.value)}
             >
               <option value="">Select Category</option>
-              {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+              {categories.map((c:any) => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
             {fieldErrors.category_id && <p className="text-red-500 text-sm">{fieldErrors.category_id}</p>}
           </div>
@@ -266,7 +295,7 @@ export default function AddProduct() {
               onChange={(e) => handleSubcategoryChange(e.target.value)}
             >
               <option value="">Select Sub Category</option>
-              {subcategories.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+              {subcategories.map((s:any) => <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
           </div>
 
@@ -278,7 +307,7 @@ export default function AddProduct() {
               onChange={(e) => setForm({ ...form, sub_subcategory_id: e.target.value })}
             >
               <option value="">Select Sub Sub Category</option>
-              {subSubcategories.map((ss) => <option key={ss.id} value={ss.id}>{ss.name}</option>)}
+              {subSubcategories.map((ss:any) => <option key={ss.id} value={ss.id}>{ss.name}</option>)}
             </select>
           </div>
         </div>
@@ -402,7 +431,8 @@ export default function AddProduct() {
               className={`border p-2 w-full mt-2 ${fieldErrors.shipping_charge ? "border-red-500" : ""}`}
               placeholder="Enter shipping charges"
               value={form.shipping_charge}
-              onChange={(e) => setForm({ ...form, shipping_charge: e.target.value })}
+              onChange={(e) => setForm({ ...form, shipping_charge: Number(e.target.value)
+ })}
             />
           )}
           {fieldErrors.shipping_charge && <p className="text-red-500 text-sm">{fieldErrors.shipping_charge}</p>}

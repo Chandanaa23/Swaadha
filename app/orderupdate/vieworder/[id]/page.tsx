@@ -45,7 +45,9 @@ interface Order {
 
 export default function OrderUpdatePage() {
   const pathname = usePathname();
-  const orderId = parseInt(pathname.split("/").pop() || "");
+const segments = pathname.split("/").filter(Boolean);
+const orderId = parseInt(segments[segments.length - 1], 10);
+
 
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
@@ -61,63 +63,70 @@ export default function OrderUpdatePage() {
   const [statusUpdateError, setStatusUpdateError] = useState<string | null>(null);
 
   useEffect(() => {
-    async function fetchOrder() {
-      setLoading(true);
-      setError(null);
+  async function fetchOrder() {
+    setLoading(true);
+    setError(null);
 
-      if (!orderId || isNaN(orderId)) {
+    if (!orderId || isNaN(orderId)) {
+      setError("Invalid order ID");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/orders/${orderId}`);
+      const result = await res.json();
+
+      console.log("API response:", result); // Debug log
+
+      // Make sure order exists in response
+      if (!result.order) {
+        setError(result.error || "Order not found");
+        setOrder(null);
         setLoading(false);
         return;
       }
 
-      try {
-        // Call your backend API that includes email
-        const res = await fetch(`/api/orders/${orderId}`);
-        const result = await res.json();
+      const orderData: Order = result.order;
 
-        if (!res.ok) {
-          setError(result.error || "Order not found");
-          console.log(result.order.email); // the email is in API response
-          setOrder(null);
-          setLoading(false);
-          return;
-        }
+      // Ensure cart items have shipping charges if needed
+let items: CartItem[] = Array.isArray(orderData.cart_items) ? orderData.cart_items : [];
+      if (items.length > 0) {
+        const productIds = items.map((item) => item.productId);
+        const { data: productsData, error: productsError } = await supabase
+          .from("products")
+          .select("id, shipping_charge")
+          .in("id", productIds);
 
-        const orderData: Order = result.order;
+        if (productsError) throw productsError;
 
-        // Ensure cart items have shipping charges if needed
-        let items: CartItem[] = orderData.cart_items ?? [];
-        if (items.length > 0) {
-          const productIds = items.map((item) => item.productId);
-          const { data: productsData, error: productsError } = await supabase
-            .from("products")
-            .select("id, shipping_charge")
-            .in("id", productIds);
-
-          if (productsError) throw productsError;
-
-          items = items.map((item) => {
-            const product = productsData?.find((p) => p.id === item.productId);
-            return {
-              ...item,
-              shipping_charge: product?.shipping_charge ?? 0,
-            };
-          });
-        }
-
-        setOrder({ ...orderData, cart_items: items });
-        setOrderStatus(orderData.status);
-        setPaymentPaid(orderData.payment_method === "paid" || orderData.payment_status === "paid");
-        setShippingMethod("");
-        setLoading(false);
-      } catch (err: any) {
-        setError(err.message || "Unknown error");
-        setLoading(false);
+        items = items.map((item) => {
+          const product = productsData?.find((p) => p.id === item.productId);
+          return {
+            ...item,
+            shipping_charge: product?.shipping_charge ?? 0,
+          };
+        });
       }
-    }
 
-    fetchOrder();
-  }, [orderId]);
+      setOrder({ ...orderData, cart_items: items });
+      setOrderStatus(orderData.status);
+      setPaymentPaid(
+        orderData.payment_method === "paid" ||
+        orderData.payment_status === "paid"
+      );
+      setShippingMethod("");
+      setLoading(false);
+    } catch (err: any) {
+      console.error("Fetch order error:", err);
+      setError(err.message || "Unknown error");
+      setLoading(false);
+    }
+  }
+
+  fetchOrder();
+}, [orderId]);
+
 
 
 
@@ -217,20 +226,50 @@ export default function OrderUpdatePage() {
             </tr>
           </thead>
           <tbody>
-            ${order.cart_items?.map((item, idx) => {
-      const total = (item.price * item.quantity) + (item.shipping_charge ?? 0);
-      return `
-                <tr>
-                  <td>${idx + 1}</td>
-                  <td>${item.name}${item.variation_name ? ` (${item.variation_name})` : ''}</td>
-                  <td>${item.quantity}</td>
-                  <td>₹${item.price.toFixed(2)}</td>
-                  <td>₹${(item.shipping_charge ?? 0).toFixed(2)}</td>
-                  <td>₹${total.toFixed(2)}</td>
-                </tr>
-              `;
-    }).join("")}
-          </tbody>
+  {order.cart_items && order.cart_items.length > 0 ? (
+    order.cart_items.map((item, idx) => {
+      const price = item.price ?? 0;
+      const qty = item.quantity ?? 0;
+      const shipping = item.shipping_charge ?? 0;
+      const tax = getItemTax(item);
+      const discount = getItemDiscount(item);
+      const totalPrice = price * qty + shipping + tax - discount;
+
+      return (
+        <tr key={item.id} className="border-b">
+          <td className="py-2 px-3 align-top">{idx + 1}</td>
+          <td className="py-2 px-3 flex items-start gap-3">
+            {item.image ? (
+              <img src={item.image} alt={item.name} className="w-10 h-10 object-cover rounded" />
+            ) : (
+              <div className="w-10 h-10 bg-gray-200 flex items-center justify-center rounded" />
+            )}
+            <div>
+              <p className="font-semibold">
+                {(item.name ?? "Unnamed Product").length > 20
+                  ? (item.name ?? "Unnamed Product").slice(0, 20) + "..."
+                  : item.name ?? "Unnamed Product"}
+              </p>
+              <p className="text-xs text-gray-500">Qty : {qty}</p>
+              <p className="text-xs text-gray-500">Price : ₹{price.toFixed(2)}</p>
+              {item.variation_name && <p className="text-xs text-gray-500">Variation : {item.variation_name}</p>}
+            </div>
+          </td>
+          <td className="py-2 px-3 text-right align-top">₹{price.toFixed(2)}</td>
+          <td className="py-2 px-3 text-right align-top">₹{shipping.toFixed(2)}</td>
+          <td className="py-2 px-3 text-right align-top">₹{totalPrice.toFixed(2)}</td>
+        </tr>
+      );
+    })
+  ) : (
+    <tr>
+      <td colSpan={5} className="text-center text-gray-400 py-4">
+        No items in this order
+      </td>
+    </tr>
+  )}
+</tbody>
+
         </table>
 
         <h3 class="text-right">Grand Total: ₹${order.grand_total.toFixed(2)}</h3>

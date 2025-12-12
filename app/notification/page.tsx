@@ -11,7 +11,7 @@ const supabase = createClient(
 
 interface NotificationBanner {
   id: string;
-  image_url: string;
+  image_url: string; // Base64 image string
   active: boolean;
   created_at: string;
 }
@@ -78,31 +78,39 @@ export default function NotificationBannerSettings() {
     fetchBanners();
   }, []);
 
-  // Upload image
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Upload image (convert to Base64)
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
   if (!e.target.files?.length) return;
 
   const file = e.target.files[0];
-  const fileName = `${Date.now()}_${file.name}`;
+  const reader = new FileReader();
 
-  setUploading(true);
+  reader.onloadstart = () => setUploading(true);
+reader.onload = () => {
+  const fullDataUrl = reader.result as string; // keep prefix
 
-  const { error: uploadError } = await supabase.storage
-    .from("banners")
-    .upload(fileName, file);
+  setSelectedBanner(prev =>
+    prev
+      ? { ...prev, image_url: fullDataUrl }
+      : {
+          id: "", // new banner
+          image_url: fullDataUrl,
+          active: true,
+          created_at: new Date().toISOString(),
+        }
+  );
 
-  if (uploadError) {
-    toast.error("Upload failed");
-    setUploading(false);
-    return;
-  }
-
-  // FIXED: extract publicUrl correctly
-  const { data } = supabase.storage.from("banners").getPublicUrl(fileName);
-  const publicUrl = data.publicUrl;
-
-  setSelectedBanner(prev => prev && { ...prev, image_url: publicUrl });
   setUploading(false);
+};
+
+
+    
+  reader.onerror = () => {
+    toast.error("Failed to read file");
+    setUploading(false);
+  };
+
+  reader.readAsDataURL(file);
 };
 
 
@@ -112,48 +120,63 @@ export default function NotificationBannerSettings() {
   };
 
   // Save or update
-  const saveBanner = async () => {
-    if (!selectedBanner?.image_url) {
-      toast.error("Please upload an image");
-      return;
-    }
+ const saveBanner = async () => {
+  if (!selectedBanner?.image_url) {
+    toast.error("Please upload an image");
+    return;
+  }
 
-    setLoading(true);
+  setLoading(true);
 
+  try {
     if (selectedBanner.id) {
+      // UPDATE
       const { error } = await supabase
         .from("notification_banner")
-        .update({ image_url: selectedBanner.image_url, active: selectedBanner.active })
+        .update({
+          image_url: selectedBanner.image_url,
+          active: selectedBanner.active,
+        })
         .eq("id", selectedBanner.id);
 
-      if (error) toast.error("Update failed");
-      else toast.success("Banner updated!");
+      if (error) throw error;
+      toast.success("Banner updated!");
     } else {
+      // INSERT
       const { data, error } = await supabase
         .from("notification_banner")
-        .insert({ image_url: selectedBanner.image_url, active: selectedBanner.active })
+        .insert({
+          image_url: selectedBanner.image_url,
+          active: selectedBanner.active,
+        })
         .select()
         .single();
 
-      if (error) toast.error("Create failed");
-      else {
-        toast.success("Banner created!");
-        setSelectedBanner(data);
-      }
+      if (error) throw error;
+
+      toast.success("Banner created!");
+      setSelectedBanner(data);
     }
 
-    fetchBanners();
+    await fetchBanners();
+  } catch (err) {
+    console.error(err);
+    toast.error("Failed to save banner");
+  } finally {
     setLoading(false);
-  };
+  }
+};
 
   const createNewBanner = () => {
-    setSelectedBanner({
-      id: "",
-      image_url: "",
-      active: true,
-      created_at: new Date().toISOString(),
-    });
-  };
+  setSelectedBanner({
+    id: "",                 // important!
+    image_url: "",          
+    active: true,
+    created_at: new Date().toISOString(),
+  });
+};
+
+
 
   return (
     <div className="p-6 w-full mx-auto space-y-6 bg-white">
@@ -181,7 +204,9 @@ export default function NotificationBannerSettings() {
           {paginatedData.map(banner => (
             <tr key={banner.id} className="hover:bg-gray-50">
               <td className="p-2 border">
-                <img src={banner.image_url} alt="" className="h-16 object-cover rounded" />
+                {banner.image_url && (
+                  <img src={banner.image_url} alt="" className="h-16 object-cover rounded" />
+                )}
               </td>
               <td className="p-2 border">{banner.active ? "Yes" : "No"}</td>
               <td className="p-2 border space-x-2">
@@ -191,7 +216,6 @@ export default function NotificationBannerSettings() {
                 >
                   Edit
                 </button>
-
                 <button
                   onClick={() => openDeleteModal(banner.id)}
                   className="px-3 py-1 bg-red-600 text-white rounded"
@@ -238,10 +262,7 @@ export default function NotificationBannerSettings() {
           {selectedBanner.image_url && (
             <div>
               <img src={selectedBanner.image_url} className="h-32 rounded mt-2" />
-              <button
-                onClick={removeImage}
-                className="mt-2 text-red-600 underline"
-              >
+              <button onClick={removeImage} className="mt-2 text-red-600 underline">
                 Remove Image
               </button>
             </div>

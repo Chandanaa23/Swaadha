@@ -13,7 +13,9 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 interface Product {
   id: number;
-  name_en: string;
+  name: string;
+  active: boolean;
+
 }
 
 export default function ProductList() {

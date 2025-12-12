@@ -107,10 +107,16 @@ export default function ProductDetailsPage() {
       return;
     }
 
-
+    // Calculate average rating safely
+    const avg =
+      reviewData && reviewData.length > 0
+        ? reviewData.reduce((sum, r) => sum + (r.rating || 0), 0) /
+        reviewData.length
+        : 0;
 
     setAvgRating(avg);
   };
+
 
 
 
@@ -294,13 +300,13 @@ export default function ProductDetailsPage() {
     const { data: authUser } = await supabase.auth.getUser();
     const profileName = authUser?.user?.user_metadata?.name || "Customer";
 
-    await supabase.from("product_reviews").insert([
+    const { error } = await supabase.from("product_reviews").insert([
       {
         product_id: productId,
         user_id: user.id,
         rating,
         comment,
-        user_name: profileName // store name directly
+        user_name: profileName
       }
     ]);
 
@@ -315,8 +321,11 @@ export default function ProductDetailsPage() {
         .eq("product_id", productId);
 
       setReviews(refreshed || []);
+    } else {
+      toast.error("Failed to add review");
     }
   }
+
 
 
   if (loading) return <p className="text-center mt-12">Loading...</p>;
@@ -370,16 +379,19 @@ export default function ProductDetailsPage() {
             {product.name}
 
             {/* Stock Badge */}
-            {selectedVariation?.stock === 0 ? (
-              <span className="bg-red-100 text-red-700 px-3 py-1 rounded-full text-sm font-semibold">
-                Out of Stock
-              </span>
-            ) : selectedVariation?.stock <= 10 ? (
-              <span className="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-sm font-semibold">
-                Limited Stock
-              </span>
-            ) : null}
+            {selectedVariation && (
+              selectedVariation.stock === 0 ? (
+                <span className="bg-red-100 text-red-700 px-3 py-1 rounded-full text-sm font-semibold">
+                  Out of Stock
+                </span>
+              ) : selectedVariation.stock <= 10 ? (
+                <span className="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-sm font-semibold">
+                  Limited Stock
+                </span>
+              ) : null
+            )}
           </h1>
+
 
           {/* ⭐ Average Rating */}
           <div className="flex items-center gap-2 mt-1">

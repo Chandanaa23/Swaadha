@@ -121,7 +121,7 @@ export default function ProductEditPage() {
 
   const handleVariationChange = (index: number, field: keyof ProductVariation, value: any) => {
     const updated = [...variations];
-    updated[index][field] = field === "price" || field === "stock" ? Number(value) : value;
+    (updated[index] as any)[field]  = field === "price" || field === "stock" ? Number(value) : value;
     setVariations(updated);
   };
 
